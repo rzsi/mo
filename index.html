@@ -28,7 +28,13 @@
 
     button:hover { background: #166fe5; }
 
-    .register-btn { background: #42b72a; margin-top: 8px; }
+    .green-btn { background: #42b72a; margin-top: 8px; }
+
+    .green-btn:hover { background: #36a420; }
+
+    .gray-btn { background: #e4e6ea; color: #333; margin-top: 8px; }
+
+    .gray-btn:hover { background: #d0d2d5; }
 
     .logout { background: #e74c3c; margin-top: 10px; }
 
@@ -38,7 +44,7 @@
 
     .tab.active { background: #1877f2; color: white; }
 
-    .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; flex-shrink: 0; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
     .frame-option { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 3px solid transparent; }
 
@@ -55,8 +61,6 @@
     .post { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-
-    .post-name { font-weight: bold; font-size: 15px; }
 
     .chat-box { height: 350px; overflow-y: auto; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; }
 
@@ -76,7 +80,9 @@
 
     .chat-input-row button { width: auto; padding: 10px 15px; }
 
-    #setup-section, #app-section { display: none; }
+    .divider { text-align: center; color: #999; margin: 10px 0; font-size: 13px; }
+
+    #register-section, #setup-section, #app-section { display: none; }
 
   </style>
 
@@ -88,45 +94,69 @@
 
 <div class="container">
 
-  <!-- Auth -->
+  <!-- Sign In -->
 
-  <div id="auth-section">
+  <div id="login-section">
 
     <div class="card">
 
-      <h2 style="margin-bottom:15px;text-align:center">Welcome 👋</h2>
+      <h2 style="margin-bottom:15px;text-align:center">Sign In 👋</h2>
 
-      <input id="email" type="email" placeholder="Email">
+      <input id="login-email" type="email" placeholder="Email">
 
-      <input id="password" type="password" placeholder="Password (6+ characters)">
+      <input id="login-password" type="password" placeholder="Password">
 
       <button onclick="login()">Sign In</button>
 
-      <button class="register-btn" onclick="register()">Create New Account</button>
+      <div class="divider">— or —</div>
 
-      <p id="auth-error" style="color:red;margin-top:8px;text-align:center"></p>
+      <button class="green-btn" onclick="show('register-section')">Create New Account</button>
+
+      <p id="login-error" style="color:red;margin-top:8px;text-align:center"></p>
 
     </div>
 
   </div>
 
-  <!-- Setup Profile -->
+  <!-- Register -->
+
+  <div id="register-section">
+
+    <div class="card">
+
+      <h2 style="margin-bottom:15px;text-align:center">Create Account 🎉</h2>
+
+      <input id="reg-name" type="text" placeholder="Display Name">
+
+      <input id="reg-handle" type="text" placeholder="@username (min 2 characters)">
+
+      <input id="reg-email" type="email" placeholder="Email">
+
+      <input id="reg-password" type="password" placeholder="Password (6+ characters)">
+
+      <button onclick="register()" class="green-btn">Create Account</button>
+
+      <button class="gray-btn" onclick="show('login-section')">← Back to Sign In</button>
+
+      <p id="reg-error" style="color:red;margin-top:8px;text-align:center"></p>
+
+    </div>
+
+  </div>
+
+  <!-- Setup Avatar -->
 
   <div id="setup-section">
 
     <div class="card">
 
-      <h2 style="margin-bottom:15px;text-align:center">🎨 Create Your Profile</h2>
+      <h2 style="margin-bottom:15px;text-align:center">🎨 Choose Your Avatar</h2>
 
-      <input id="username-input" type="text" placeholder="Display Name">
-
-      <input id="handle-input" type="text" placeholder="@username (min 2 characters)">
-
-      <p style="margin:10px 0 5px;font-weight:bold">Choose Avatar:</p>
+      <p style="margin:10px 0 5px;font-weight:bold">Avatar Emoji:</p>
 
       <div class="avatar-frames" id="emoji-options"></div>
 
-      <p style="margin:10px 0 5px;font-weight:bold">Choose Color:</p>
+      <p style="margin:10px 0 5px;font-weight:bold">Avatar Color:</p>
 
       <div class="color-options" id="color-options"></div>
 
@@ -138,9 +168,7 @@
 
       </div>
 
-      <button onclick="saveProfile()">Save & Continue ✅</button>
-
-      <p id="setup-error" style="color:red;margin-top:8px;text-align:center"></p>
+      <button onclick="saveProfile()">Let's Go! 🚀</button>
 
     </div>
 
@@ -176,8 +204,6 @@
 
     </div>
 
-    <!-- Chat -->
-
     <div id="chat-tab">
 
       <div class="card">
@@ -195,8 +221,6 @@
       </div>
 
     </div>
-
-    <!-- Posts -->
 
     <div id="posts-tab" style="display:none">
 
@@ -255,6 +279,8 @@
   let selectedEmoji = '😀';
 
   let selectedColor = '#1877f2';
+
+  let tempProfile = null;
 
   const emojis = ['😀','😎','🦁','🐯','🦊','🐼','🐸','🤖','👾','🦄','🔥','⭐'];
 
@@ -326,6 +352,16 @@
 
   updatePreview();
 
+  window.show = (id) => {
+
+    ['login-section','register-section','setup-section','app-section'].forEach(s => {
+
+      document.getElementById(s).style.display = s === id ? 'block' : 'none';
+
+    });
+
+  };
+
   onAuthStateChanged(auth, async (user) => {
 
     if (user) {
@@ -348,21 +384,11 @@
 
     } else {
 
-      show('auth-section');
+      show('login-section');
 
     }
 
   });
-
-  function show(id) {
-
-    ['auth-section','setup-section','app-section'].forEach(s => {
-
-      document.getElementById(s).style.display = s === id ? 'block' : 'none';
-
-    });
-
-  }
 
   function showApp() {
 
@@ -386,37 +412,31 @@
 
   }
 
-  window.saveProfile = async () => {
-
-    const username = document.getElementById('username-input').value.trim();
-
-    const handle = document.getElementById('handle-input').value.trim().replace('@','');
-
-    if (!username) { document.getElementById('setup-error').textContent = 'Enter your display name!'; return; }
-
-    if (handle.length < 2) { document.getElementById('setup-error').textContent = 'Username must be at least 2 characters!'; return; }
-
-    userProfile = { username, handle, emoji: selectedEmoji, color: selectedColor };
-
-    await setDoc(doc(db, 'users', currentUser.uid), userProfile);
-
-    showApp();
-
-  };
-
   window.register = async () => {
 
-    const email = document.getElementById('email').value;
+    const name = document.getElementById('reg-name').value.trim();
 
-    const password = document.getElementById('password').value;
+    const handle = document.getElementById('reg-handle').value.trim().replace('@','');
+
+    const email = document.getElementById('reg-email').value.trim();
+
+    const password = document.getElementById('reg-password').value;
+
+    if (!name) { document.getElementById('reg-error').textContent = 'Enter your name!'; return; }
+
+    if (handle.length < 2) { document.getElementById('reg-error').textContent = 'Username must be 2+ characters!'; return; }
+
+    if (!email) { document.getElementById('reg-error').textContent = 'Enter your email!'; return; }
 
     try {
+
+      tempProfile = { username: name, handle };
 
       await createUserWithEmailAndPassword(auth, email, password);
 
     } catch (e) {
 
-      document.getElementById('auth-error').textContent = 'Error: ' + e.message;
+      document.getElementById('reg-error').textContent = 'Error: ' + e.message;
 
     }
 
@@ -424,9 +444,9 @@
 
   window.login = async () => {
 
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('login-email').value;
 
-    const password = document.getElementById('password').value;
+    const password = document.getElementById('login-password').value;
 
     try {
 
@@ -434,9 +454,31 @@
 
     } catch (e) {
 
-      document.getElementById('auth-error').textContent = 'Wrong email or password!';
+      document.getElementById('login-error').textContent = 'Wrong email or password!';
 
     }
+
+  };
+
+  window.saveProfile = async () => {
+
+    const profile = {
+
+      username: tempProfile ? tempProfile.username : 'User',
+
+      handle: tempProfile ? tempProfile.handle : 'user',
+
+      emoji: selectedEmoji,
+
+      color: selectedColor
+
+    };
+
+    await setDoc(doc(db, 'users', currentUser.uid), profile);
+
+    userProfile = profile;
+
+    showApp();
 
   };
 
@@ -558,7 +600,7 @@
 
               <div>
 
-                <div class="post-name">${data.username}</div>
+                <div style="font-weight:bold">${data.username}</div>
 
                 <div style="font-size:12px;color:#888">@${data.handle}</div>
 
@@ -566,7 +608,7 @@
 
             </div>
 
-            <div class="post-text">${data.text}</div>
+            <div>${data.text}</div>
 
           </div>`;
 
@@ -593,4 +635,3 @@
 </body>
 
 </html>
-
