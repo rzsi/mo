@@ -45,3 +45,348 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>my-social</title>
+
+  <style>
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { font-family: Arial, sans-serif; background: #f0f2f5; }
+
+    .navbar { background: #1877f2; color: white; padding: 15px 20px; font-size: 22px; font-weight: bold; }
+
+    .container { max-width: 600px; margin: 20px auto; padding: 0 10px; }
+
+    .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+
+    button { background: #1877f2; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; width: 100%; margin-top: 5px; }
+
+    button:hover { background: #166fe5; }
+
+    .post { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+    .post-user { font-weight: bold; color: #1877f2; margin-bottom: 5px; }
+
+    .post-text { font-size: 16px; margin-bottom: 8px; }
+
+    .post-time { font-size: 12px; color: #999; }
+
+    .chat-box { height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+
+    .chat-msg { margin-bottom: 8px; }
+
+    .chat-msg span { font-weight: bold; color: #1877f2; }
+
+    .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+
+    .tab { flex: 1; background: #e4e6ea; color: #333; border-radius: 8px; }
+
+    .tab.active { background: #1877f2; color: white; }
+
+    #auth-section {}
+
+    #app-section { display: none; }
+
+    .user-info { color: #555; font-size: 14px; margin-bottom: 10px; }
+
+    .logout { background: #e74c3c; margin-top: 10px; }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="navbar">🌐 My Social</div>
+
+<div class="container">
+
+  <!-- تسجيل الدخول -->
+
+  <div id="auth-section">
+
+    <div class="card">
+
+      <h2 style="margin-bottom:15px">مرحباً 👋</h2>
+
+      <input id="email" type="email" placeholder="الإيميل">
+
+      <input id="password" type="password" placeholder="كلمة المرور">
+
+      <button onclick="login()">تسجيل الدخول</button>
+
+      <button onclick="register()" style="background:#42b72a;margin-top:8px">إنشاء حساب جديد</button>
+
+      <p id="auth-error" style="color:red;margin-top:8px"></p>
+
+    </div>
+
+  </div>
+
+  <!-- التطبيق الرئيسي -->
+
+  <div id="app-section">
+
+    <div class="card">
+
+      <p class="user-info" id="user-email"></p>
+
+      <div class="tabs">
+
+        <button class="tab active" onclick="showTab('posts')">📝 المنشورات</button>
+
+        <button class="tab" onclick="showTab('chat')">💬 الشات</button>
+
+      </div>
+
+    </div>
+
+    <!-- المنشورات -->
+
+    <div id="posts-tab">
+
+      <div class="card">
+
+        <textarea id="post-text" placeholder="شو في بالك؟" rows="3"></textarea>
+
+        <button onclick="addPost()">نشر ✉️</button>
+
+      </div>
+
+      <div id="posts-list"></div>
+
+    </div>
+
+    <!-- الشات -->
+
+    <div id="chat-tab" style="display:none">
+
+      <div class="card">
+
+        <div class="chat-box" id="chat-box"></div>
+
+        <input id="chat-input" placeholder="اكتب رسالة...">
+
+        <button onclick="sendMessage()">إرسال 🚀</button>
+
+      </div>
+
+    </div>
+
+    <button class="logout" onclick="logout()">تسجيل الخروج</button>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  import { getFirestore, collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+
+    apiKey: "AIzaSyCZMaW1zJ7OgL6MTa8atPmioUc0CpTrHac",
+
+    authDomain: "my-social-1593e.firebaseapp.com",
+
+    projectId: "my-social-1593e",
+
+    storageBucket: "my-social-1593e.firebasestorage.app",
+
+    messagingSenderId: "879571383969",
+
+    appId: "1:879571383969:web:4a2ca80067ddc2f63622e0"
+
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+
+  const db = getFirestore(app);
+
+  let currentUser = null;
+
+  // مراقبة حالة المستخدم
+
+  onAuthStateChanged(auth, (user) => {
+
+    if (user) {
+
+      currentUser = user;
+
+      document.getElementById('auth-section').style.display = 'none';
+
+      document.getElementById('app-section').style.display = 'block';
+
+      document.getElementById('user-email').textContent = '👤 ' + user.email;
+
+      loadPosts();
+
+      loadChat();
+
+    } else {
+
+      document.getElementById('auth-section').style.display = 'block';
+
+      document.getElementById('app-section').style.display = 'none';
+
+    }
+
+  });
+
+  window.register = async () => {
+
+    const email = document.getElementById('email').value;
+
+    const password = document.getElementById('password').value;
+
+    try {
+
+      await createUserWithEmailAndPassword(auth, email, password);
+
+    } catch (e) {
+
+      document.getElementById('auth-error').textContent = 'خطأ: ' + e.message;
+
+    }
+
+  };
+
+  window.login = async () => {
+
+    const email = document.getElementById('email').value;
+
+    const password = document.getElementById('password').value;
+
+    try {
+
+      await signInWithEmailAndPassword(auth, email, password);
+
+    } catch (e) {
+
+      document.getElementById('auth-error').textContent = 'خطأ: ' + e.message;
+
+    }
+
+  };
+
+  window.logout = () => signOut(auth);
+
+  window.addPost = async () => {
+
+    const text = document.getElementById('post-text').value;
+
+    if (!text.trim()) return;
+
+    await addDoc(collection(db, 'posts'), {
+
+      text, email: currentUser.email, time: serverTimestamp()
+
+    });
+
+    document.getElementById('post-text').value = '';
+
+  };
+
+  function loadPosts() {
+
+    const q = query(collection(db, 'posts'), orderBy('time', 'desc'));
+
+    onSnapshot(q, (snap) => {
+
+      const list = document.getElementById('posts-list');
+
+      list.innerHTML = '';
+
+      snap.forEach(doc => {
+
+        const d = doc.data();
+
+        list.innerHTML += `<div class="post">
+
+          <div class="post-user">👤 ${d.email}</div>
+
+          <div class="post-text">${d.text}</div>
+
+        </div>`;
+
+      });
+
+    });
+
+  }
+
+  window.sendMessage = async () => {
+
+    const text = document.getElementById('chat-input').value;
+
+    if (!text.trim()) return;
+
+    await addDoc(collection(db, 'chat'), {
+
+      text, email: currentUser.email, time: serverTimestamp()
+
+    });
+
+    document.getElementById('chat-input').value = '';
+
+  };
+
+  function loadChat() {
+
+    const q = query(collection(db, 'chat'), orderBy('time', 'asc'));
+
+    onSnapshot(q, (snap) => {
+
+      const box = document.getElementById('chat-box');
+
+      box.innerHTML = '';
+
+      snap.forEach(doc => {
+
+        const d = doc.data();
+
+        box.innerHTML += `<div class="chat-msg"><span>${d.email}:</span> ${d.text}</div>`;
+
+      });
+
+      box.scrollTop = box.scrollHeight;
+
+    });
+
+  }
+
+  window.showTab = (tab) => {
+
+    document.getElementById('posts-tab').style.display = tab === 'posts' ? 'block' : 'none';
+
+    document.getElementById('chat-tab').style.display = tab === 'chat' ? 'block' : 'none';
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    event.target.classList.add('active');
+
+  };
+
+</script>
+
+</body>
+
+</html>
